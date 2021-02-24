@@ -6,7 +6,7 @@ This report summarizes the usage and capacity data of CPU and Memory in cluster 
 
 ## How to Use
 
-####Setting up the Report
+#### Setting up the Report
 
 Setup this cluster usage report by following below steps:
 
@@ -41,7 +41,7 @@ Setup this cluster usage report by following below steps:
 
 
 
-####Creating Regular Report
+#### Creating Regular Report
 
 To support IT operation more efficiently, you may reference these two script files to automate report sending:
 
