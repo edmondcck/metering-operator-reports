@@ -1,0 +1,9 @@
+apiVersion: metering.openshift.io/v1
+kind: Report
+metadata:
+  name: cluster-usage-hourly
+  namespace: openshift-metering
+spec:
+  query: "custom-cluster-usage"
+  schedule:
+    period: "hourly"

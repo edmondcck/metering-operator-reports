@@ -1,0 +1,9 @@
+apiVersion: metering.openshift.io/v1
+kind: ReportDataSource
+metadata:
+  name: custom-cluster-usage-raw
+  namespace: openshift-metering
+spec:
+  reportQueryView:
+    queryName: custom-cluster-usage-raw
+

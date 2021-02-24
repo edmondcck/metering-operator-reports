@@ -1,0 +1,51 @@
+apiVersion: metering.openshift.io/v1
+kind: ReportQuery
+metadata:
+  name: custom-cluster-usage-raw
+  namespace: openshift-metering
+spec:
+  columns:
+  - name: timestamp
+    type: timestamp
+    unit: date
+  - name: dt
+    type: varchar
+  - name: cluster_usage_cpu_cores
+    type: double
+  - name: cluster_capacity_cpu_cores
+    type: double
+  - name: cluster_usage_memory_bytes
+    type: double
+  - name: cluster_capacity_memory_bytes
+    type: double
+  - name: pod_count
+    type: double
+  - name: node_count
+    type: double
+  inputs:
+  - default: cluster-cpu-capacity-raw
+    name: ClusterCpuCapacityRawDataSourceName
+    type: ReportDataSource
+  - default: cluster-cpu-usage-raw
+    name: ClusterCpuUsageRawDataSourceName
+    type: ReportDataSource
+  - default: cluster-memory-capacity-raw
+    name: ClusterMemoryCapacityRawDataSourceName
+    type: ReportDataSource
+  - default: cluster-memory-usage-raw
+    name: ClusterMemoryUsageRawDataSourceName
+    type: ReportDataSource
+  query: |
+    SELECT
+      cpuu."timestamp",
+      cpuu.dt,
+      cpuu.cpu_cores as cluster_usage_cpu_cores,
+      cpuc.cpu_cores as cluster_capacity_cpu_cores,
+      memu.memory_bytes as cluster_usage_memory_bytes,
+      memc.memory_bytes as cluster_capacity_memory_bytes,
+      cpuu.pod_count as pod_count,
+      cpuc.node_count as node_count
+    FROM {| dataSourceTableName .Report.Inputs.ClusterCpuUsageRawDataSourceName |} cpuu
+    LEFT JOIN {| dataSourceTableName .Report.Inputs.ClusterCpuCapacityRawDataSourceName |} cpuc ON cpuu."timestamp" = cpuc."timestamp" AND cpuu.dt = cpuc.dt
+    LEFT JOIN {| dataSourceTableName .Report.Inputs.ClusterMemoryUsageRawDataSourceName |} memu ON cpuu."timestamp" = memu."timestamp" AND cpuu.dt = memu.dt
+    LEFT JOIN {| dataSourceTableName .Report.Inputs.ClusterMemoryCapacityRawDataSourceName |} memc ON cpuu."timestamp" = memc."timestamp" AND cpuu.dt = memc.dt

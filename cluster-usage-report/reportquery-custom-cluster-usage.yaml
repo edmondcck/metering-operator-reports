@@ -1,0 +1,66 @@
+apiVersion: metering.openshift.io/v1
+kind: ReportQuery
+metadata:
+  name: custom-cluster-usage
+  namespace: openshift-metering
+spec:
+  columns:
+  - name: period_start
+    type: timestamp
+    unit: date
+  - name: period_end
+    type: timestamp
+    unit: date
+  - name: avg_cluster_usage_cpu_cores
+    type: double
+    unit: cpu_cores
+  - name: avg_cluster_capacity_cpu_cores
+    type: double
+    unit: cpu_cores
+  - name: avg_cluster_usage_memory_bytes
+    type: double
+    unit: memory_bytes
+  - name: avg_cluster_capacity_memory_bytes
+    type: double
+    unit: memory_bytes
+  - name: avg_pod_count
+    type: double
+  - name: avg_node_count
+    type: double
+  inputs:
+  - name: ReportingStart
+    type: time
+  - name: ReportingEnd
+    type: time
+  - name: CustomClusterUsageReportName
+    type: Report
+  - default: custom-cluster-usage-raw
+    name: CustomClusterUsageRawDataSourceName
+    type: ReportDataSource
+  query: |
+    SELECT
+      timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}' AS period_start,
+      timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}' AS period_end,
+    {|- if .Report.Inputs.CustomClusterUsageReportName |}
+      avg(avg_cluster_usage_cpu_cores) as avg_cluster_usage_cpu_cores,
+      avg(avg_cluster_capacity_cpu_cores) as avg_cluster_capacity_cpu_cores,
+      avg(avg_cluster_usage_memory_bytes) as avg_cluster_usage_memory_bytes,
+      avg(avg_cluster_capacity_memory_bytes) as avg_cluster_capacity_memory_bytes,
+      avg(avg_pod_count) AS avg_pod_count,
+      avg(avg_node_count) AS avg_node_count
+      FROM {| .Report.Inputs.CustomClusterUsageReportName | reportTableName |}
+      WHERE period_start  >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+      AND period_end <= timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+    {|- else |}
+      avg(cluster_usage_cpu_cores) as avg_cluster_usage_cpu_cores,
+      avg(cluster_capacity_cpu_cores) as avg_cluster_capacity_cpu_cores,
+      avg(cluster_usage_memory_bytes) as avg_cluster_usage_memory_bytes,
+      avg(cluster_capacity_memory_bytes) as avg_cluster_capacity_memory_bytes,
+      avg(pod_count) AS avg_pod_count,
+      avg(node_count) AS avg_node_count
+      FROM {| dataSourceTableName .Report.Inputs.CustomClusterUsageRawDataSourceName |}
+      WHERE "timestamp"  >= timestamp '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prestoTimestamp |}'
+      AND "timestamp" < timestamp '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prestoTimestamp |}'
+      AND dt >= '{| default .Report.ReportingStart .Report.Inputs.ReportingStart | prometheusMetricPartitionFormat |}'
+      AND dt <= '{| default .Report.ReportingEnd .Report.Inputs.ReportingEnd | prometheusMetricPartitionFormat |}'
+    {|- end |}
