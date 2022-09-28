@@ -18,7 +18,7 @@ from email import encoders
 #----------------------------------------#
 def getMeteringCsvReport(name):
   # Set common request parameters
-  getReportURL = 'https://metering-openshift-metering.apps.aacadi1.hkairport.com/api/v1/reports/get'
+  getReportURL = 'https://metering-openshift-metering.apps.cluster1.example.com/api/v1/reports/get'
   reqHeaders = {'Authorization': 'Bearer ' + token}
 
   reportName = name
